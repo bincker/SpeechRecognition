@@ -1,0 +1,4 @@
+../test/pcm/16k.pcm	pcm16k	中共中央政治局常委国务院总理温家宝。
+../test/pcm/16k.pcm	pcm16k	中共中央政治局常委国务院总理温家宝。
+../test/pcm/16k.pcm	pcm8k	嘿嘿，红会，王座。她。
+../test/pcm/16k.pcm	pcm16k	中共中央政治局常委国务院总理温家宝。

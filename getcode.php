@@ -1,6 +1,6 @@
 <?php
 class getcode{
-	private $c; //指定允许无法识别的次数，及重播次数
+	private $c;
 	private $sid;
 	private $file;
 	private $now;
@@ -27,8 +27,12 @@ class getcode{
             $text = '程序执行出错，代码' . $status;
         }
         $god=$this->GetOrder($text,$this->now);
-        return array('fid' =>$god['sec'],'ord'=>$god['ord'], 'sid'=>$this->sid, 'status' => $status);
+        return json_encode(array('VoiceFileName' =>$god['sec'],'CommandType'=>$god['ord'], 'SessionId'=>$this->sid));
     }
+
+    /**
+     * 新建或修改Json文件
+     */
     private function addjson($jsonname){
         if (file_exists($jsonname)) {
             $data=$this->getjson($jsonname);
@@ -39,6 +43,10 @@ class getcode{
         $json_string = json_encode($data);
         file_put_contents($jsonname, $json_string);
     }
+
+    /**
+     * 读取Json文件
+     */
     private function getjson($jsname){
         if (file_exists($jsname)) {
             $count = json_decode(file_get_contents($jsname), true);
@@ -47,6 +55,10 @@ class getcode{
         }
         return $count;
     }
+
+    /**
+     * 删除Json文件
+     */
     private function deljson($jsonname){
         if(file_exists($jsonname)){
             unlink($jsonname);
@@ -54,7 +66,7 @@ class getcode{
     }
 
     /**
-     *这里查询数据库得到该返回的语音文件
+     *这里查询数据库得到该返回的语音文件,现简单写死，供演示使用
      */
     private function Select($pass,$bool){
         $jsname=$this->sid.$this->now.'.json';
@@ -115,7 +127,13 @@ class getcode{
         }
         return array('sec'=>$sec,'ord'=>$ord);
     }
-    private function GetOrder($cont,$pass){
+
+    /**
+     * @param $cont         //语音转写产生的文本内容
+     * @param $pass         //上一个节点的唯一标识
+     * @return array|int    //返回下个要播的节点及指令（1表示播放并录音提交识别，0表示播放后挂机）
+     */
+    private function GetOrder($cont, $pass){
         $code=2;
         if(strpos($cont,"不是")){
             $code=0;
@@ -131,16 +149,32 @@ class getcode{
      */
     public function test()
     {
-        var_dump($this->index());
+        echo $this->index();
     }
 }
-function createobj($sid,$file,$now,$c){
+
+/**
+ * @param $sid   //当前语音识别进程的唯一标识
+ * @param $file  //要处理的语音文件
+ * @param $now   //当前节点的唯一标识，用以配合语音转写结果，得到下一个节点
+ * @param $c     //控制无法识别时的重拨次数，为$c+1次
+ */
+function CreateObj($sid, $file, $now, $c){
 	if($sid && $file && $now && $c){
-		$obj=new getcode($_GET['sid'],$_GET['file'],$_GET['now'],3);
+		$obj=new getcode($sid,$file,$now,3);
 		$obj->test();
 	}else{
 		echo '缺少参数'."\r\n";
 	}
 }
-createobj($sid=$_GET['sid'],$file=$_GET['file'],$now=$_GET['now'],$c=3);
+
+/** 
+ * 使用CreateObj()函数控制对象创建
+ */
+$jsonstr=file_get_contents('php://input');
+//$jsonstr='{"RoutineId":2,"VoiceFileName":"test.wav","SessionId":"135"}';
+$params=json_decode($jsonstr , true);
+//echo $jsonstr;
+//var_dump($params['SessionId']);
+CreateObj($sid=$params['SessionId'],$file=$params['VoiceFileName'],$now=$params['RoutineId'],$c=3);
 ?>
